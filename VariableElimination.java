@@ -96,6 +96,22 @@ public class VariableElimination {
         String[] quer = this.query.split("=");
         BaysNode curr = net.get(quer[0]);
         reduction(curr, quer[1]);
+
+        for(BaysNode n:this.net.values()){
+            String value= n.getValues()[n.getValues().length-1];
+            Set<String> K=FactorsCollection.get(n.getName()).keySet(); //all the cpt's keys
+            String[] keyArray = K.toArray(new String[K.size()]); //create a string array to be a iterable object for deleting
+            for (int i=0; i< keyArray.length; i++) {
+                if (keyArray[i].length() == 1 && keyArray[i].equals(value)) { //a small table
+                    FactorsCollection.get(n.getName()).remove(keyArray[i]);
+                } else if (keyArray[i].length() > 1) { //bigger one
+                    if (keyArray[i].substring(keyArray[i].length() - 1).equals(value)) { //the val will be at the last char in this case
+                        FactorsCollection.get(n.getName()).remove(keyArray[i]);
+                    }
+                }
+            }
+
+        }
     }
 
     private void reduction(BaysNode curr, String val) {

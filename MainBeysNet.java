@@ -105,7 +105,7 @@ public class MainBeysNet {
         System.out.println(hid.substring(1,2));
         String[] evi={"M","J"};
 
-        VE.FactorsToString();
+        //VE.FactorsToString();
         VE.reduction();
         VE.FactorsToString();
 
