@@ -1,26 +1,39 @@
+import org.w3c.dom.Node;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class BaysBall {
-    public static String BaysSearch(String Query, HashMap<String, BaysNode> BaysNet) {
+public class Searches {
+    HashMap<String, BaysNode> BaysNet;
+
+
+    public Searches(HashMap<String, BaysNode> BaysNet){
+        this.BaysNet=BaysNet;
+    }
+
+    public String BaysSearch(String Query) {
         String[] tmp = Query.split("\\|");
         String[] Q = tmp[0].split("-");
         String[] G = tmp[1].split(",");
         String start = Q[0]; //start the search from this node
         String toSearch = Q[1]; //end the search with this node
-        String[] given= new String[G.length];
+        String[] given = new String[G.length];
         for (int i = 0; i <G.length; i++) {
             given[i]=G[i].split("=")[0];
         }
-        for (String variable : BaysNet.keySet()) {
+        return BaysBallSearch(start, toSearch, G);
+    }
+
+   public String BaysBallSearch(String start, String toSearch,String[] given)    {
+
+        for (String variable : this.BaysNet.keySet()) {
             BaysNet.get(variable).SetColor("white");
         }
         //if we have "for given"
-        for (int i = 0; i < G.length; i++) {
+        for (int i = 0; i < given.length; i++) {
             BaysNet.get(given[i]).SetColor("red"); // red=the given node
         }
-
 
     Queue<BaysNode> queue = new LinkedList<BaysNode>();
         queue.add(BaysNet.get(start));
@@ -86,4 +99,28 @@ public class BaysBall {
     }
         return"Yes"; // independent
 }
+public String ancestor(String start, String toFind){
+    for (String variable : this.BaysNet.keySet()) {
+        BaysNet.get(variable).SetColor("white");
+    }
+    Queue<BaysNode> queue = new LinkedList<BaysNode>();
+    queue.add(BaysNet.get(start));
+    BaysNet.get(start).SetColor("grey");
+    while(!queue.isEmpty()) {
+        BaysNode curr = queue.poll();
+        if (!curr.getName().equals(toFind)) {
+            for(BaysNode c: curr.getChildren()){
+                if(c.getColor()=="white"){
+                    c.SetColor("gray");
+                    queue.add(c);
+                }
+            }
+        }
+        else{ return "No"; }
+
+    }
+    return "Yes";
+
+}
+
 }

@@ -79,9 +79,9 @@ public class MainBeysNet {
 
             }
 
-            for (String variable : V.keySet()) {
-                System.out.println(V.get(variable).toString());
-            }
+//            for (String variable : V.keySet()) {
+//                System.out.println(V.get(variable).toString());
+            //}
 
 
         } catch (ParserConfigurationException e) {
@@ -94,9 +94,20 @@ public class MainBeysNet {
         //String ans = BaysBall.BaysSearch("L-B|T'=T", V);
 
 
-        String[] a = {"T", "F"};
-        String[] b = {"T", "F"};
-        String[] e = {"T", "F"};
+        String a="P(B=T|J=T,M=T)A-E";
+        VariableElimination VE= new VariableElimination(V,a);
+        //System.out.println( Arrays.toString(VE.getEvidence()));
+        //System.out.println( Arrays.toString(VE.getHidden()));
+        //System.out.println(VE.getQuery());
+        Searches s= new Searches(V);
+        String  evidence="M";
+        String hid= "ALK";
+        System.out.println(hid.substring(1,2));
+        String[] evi={"M","J"};
+
+        VE.FactorsToString();
+        VE.reduction();
+        VE.FactorsToString();
 
 
 //        for (String s : a) {
