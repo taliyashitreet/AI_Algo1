@@ -104,7 +104,7 @@ public class MainBeysNet {
         String hid= "ALK";
         System.out.println(hid.substring(1,2));
         String[] evi={"M","J"};
-
+        System.out.println(Arrays.toString(VE.getSortedFactorsCollection()));
         //VE.FactorsToString();
         VE.reduction();
         VE.FactorsToString();
