@@ -20,6 +20,8 @@ public class MainBeysNet {
     static HashMap<String, BaysNode> V = new HashMap<>(); //collection of nodes - The Net
     static String[] array = new String[0]; // will contain the input data
 
+
+
     public static void readFromFile(String fileName) { //enter data to the "data array"
         String data = "";
         try {
@@ -105,9 +107,13 @@ public class MainBeysNet {
         System.out.println(hid.substring(1,2));
         String[] evi={"M","J"};
         System.out.println(Arrays.toString(VE.getSortedFactorsCollection()));
+
         //VE.FactorsToString();
         VE.reduction();
         VE.FactorsToString();
+        for(BaysNode n:V.values()){
+            System.out.println(n.toString());
+        }
 
 
 //        for (String s : a) {
