@@ -43,7 +43,7 @@ public class BaysNode implements Node {
         children.add((BaysNode) child);
     }
 
-    public LinkedHashMap getCpt() {
+    public LinkedHashMap<String, Double> getCpt() {
        return this.cpt;
     }
 
@@ -54,6 +54,28 @@ public class BaysNode implements Node {
         this.children = new ArrayList<>();
         this.color = "white";
         this.cpt = new LinkedHashMap<String, Double>();
+    }
+    public BaysNode(BaysNode other){
+        this.values = new String[other.values.length];
+        this.Name = other.getName();
+        this.parents = new ArrayList<BaysNode>();
+        for(BaysNode p: other.getParents()){
+            this.addToParents(p);
+        }
+        this.children = new ArrayList<BaysNode>();
+        for(BaysNode c: other.getChildren()){
+            this.addToChildren(c);
+        }
+        this.color = "white";
+        this.cpt = new LinkedHashMap<String, Double>();
+        for(String key :other.getCpt().keySet()){
+             this.cpt.put(key,other.getCpt().get(key));
+        }
+        this.values=new String[other.getValues().length];
+        for (int i = 0; i < values.length; i++) {
+           this.values[i]=other.getValues()[i];
+        }
+
     }
 
 
@@ -78,13 +100,13 @@ public class BaysNode implements Node {
         if (n == parents.size()-1) {
             for (String val1 : parents.get(n).getValues()) {
                 for (String val : this.values) {
-                    cpt.put(ans + val1 + val, Double.parseDouble(toArr[i++]));
+                    cpt.put(ans + val1+ "-" + val, Double.parseDouble(toArr[i++]));
                 }
             }
             return i;
         }
         for (String val1 : parents.get(n).getValues()) {
-            ans = val1;
+            ans = val1+"-";
             i=Enter(i, n + 1, parents, ans, toArr);
         }
     return i;

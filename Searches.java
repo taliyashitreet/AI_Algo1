@@ -28,67 +28,69 @@ public class Searches {
    public String BaysBallSearch(String start, String toSearch,String[] given)    {
 
         for (String variable : this.BaysNet.keySet()) {
-            BaysNet.get(variable).SetColor("white");
+            this.BaysNet.get(variable).SetColor("white");
         }
         //if we have "for given"
         for (int i = 0; i < given.length; i++) {
-            BaysNet.get(given[i]).SetColor("red"); // red=the given node
+            this.BaysNet.get(given[i]).SetColor("red"); // red=the given node
         }
 
     Queue<BaysNode> queue = new LinkedList<BaysNode>();
-        queue.add(BaysNet.get(start));
-        BaysNet.get(start).
-
-    SetColor("grey");
+        queue.add(this.BaysNet.get(start));
+        this.BaysNet.get(start).SetColor("grey");
         while(!queue.isEmpty())
 
     {
         BaysNode curr = queue.poll();
         if (!curr.getName().equals(toSearch)) {
-            if (curr.getColor() == "grey" || curr.getColor() == "blue") { //gry/blue means we can search of all the neighbors
+            if (curr.getColor().equals("grey") || curr.getColor().equals("blue")) { //gry/blue means we can search of all the neighbors
                 if (curr.getChildren().size() != 0) {
-                    for (BaysNode p : curr.getChildren()) {
-                        if (p.getColor() == "white") {
-                            queue.add(p);
-                            p.SetColor("green");
-                        } else if (p.getColor() == "red") {
-                            queue.add(p);
-                            p.SetColor("red from perent");
+                    for (BaysNode c : curr.getChildren()) {
+                        BaysNode C=BaysNet.get(c.getName());
+                            if (C.getColor().equals("white")) {
+                            queue.add(C);
+                            C.SetColor("green");
+                        } else if (C.getColor().equals("red")) {
+                            queue.add(C);
+                            C.SetColor("red from perent");
                         }
                     }
                 }
                 if (curr.getParents().size() != 0) {
                     for (BaysNode p : curr.getParents()) {
-                        if (p.getColor() == "white") {
-                            queue.add(p);
-                            p.SetColor("blue");
-                        } else if (p.getColor() == "red") {
-                            queue.add(p);
-                            p.SetColor("red from child"); //cant add any of this red's Neighbors
+                        BaysNode P=BaysNet.get(p.getName());
+                        if (P.getColor().equals("white")) {
+                            queue.add(P);
+                            P.SetColor("blue");
+                        } else if (P.getColor().equals("red")) {
+                            queue.add(P);
+                            P.SetColor("red from child"); //cant add any of this red's Neighbors
                         }
                     }
                 }
-            } else if (curr.getColor() == "green") { // geen means we came from a parent
+            } else if (curr.getColor().equals("green")) { // geen means we came from a parent
                 if (curr.getChildren().size() != 0) {
-                    for (BaysNode p : curr.getChildren()) {
-                        if (p.getColor() == "white") {
-                            queue.add(p);
-                            p.SetColor("green");
-                        } else if (p.getColor() == "red") {
-                            queue.add(p);
-                            p.SetColor("red from perent"); //can enter only this red's perant
+                    for (BaysNode c : curr.getChildren()) {
+                        BaysNode C=BaysNet.get(c.getName());
+                        if (C.getColor().equals("white")) {
+                            queue.add(C);
+                            C.SetColor("green");
+                        } else if (C.getColor().equals("red")) {
+                            queue.add(C);
+                            C.SetColor("red from perent"); //can enter only this red's perant
                         }
                     }
                 }
-            } else if (curr.getColor() == "red from perent") {
+            } else if (curr.getColor().equals("red from perent")) {
                 if (curr.getParents().size() != 0) {
                     for (BaysNode p : curr.getParents()) {
-                        if (p.getColor() == "white") { // doesn't entered yet
-                            queue.add(p);
-                            p.SetColor("blue");
-                        } else if (p.getColor() == "green") { //already entered
-                            queue.add(p);
-                            p.SetColor("red from perent"); //
+                        BaysNode P=BaysNet.get(p.getName());
+                        if (P.getColor().equals("white")) { // doesn't entered yet
+                            queue.add(P);
+                            P.SetColor("blue");
+                        } else if (P.getColor().equals("green")) { //already entered
+                            queue.add(P);
+                            P.SetColor("red from perent"); //
                         }
                     }
                 }
@@ -110,16 +112,16 @@ public String ancestor(String start, String toFind){
         BaysNode curr = queue.poll();
         if (!curr.getName().equals(toFind)) {
             for(BaysNode c: curr.getChildren()){
-                if(c.getColor()=="white"){
+                if(c.getColor().equals("white")){
                     c.SetColor("gray");
                     queue.add(c);
                 }
             }
         }
-        else{ return "No"; }
+        else{ return "Yes"; }
 
     }
-    return "Yes";
+    return "No";
 
 }
 

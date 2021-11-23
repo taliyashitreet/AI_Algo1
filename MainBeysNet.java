@@ -21,7 +21,6 @@ public class MainBeysNet {
     static String[] array = new String[0]; // will contain the input data
 
 
-
     public static void readFromFile(String fileName) { //enter data to the "data array"
         String data = "";
         try {
@@ -102,18 +101,19 @@ public class MainBeysNet {
         //System.out.println( Arrays.toString(VE.getHidden()));
         //System.out.println(VE.getQuery());
         Searches s= new Searches(V);
-        String  evidence="M";
-        String hid= "ALK";
-        System.out.println(hid.substring(1,2));
-        String[] evi={"M","J"};
-        System.out.println(Arrays.toString(VE.getSortedFactorsCollection()));
+//        String  evidence="M";
+//        String hid= "ALK";
+//        System.out.println(hid.substring(1,2));
+//        String[] evi={"M","J"};
+
 
         //VE.FactorsToString();
-        VE.reduction();
+        //VE.reduction();
+        //VE.FactorsToString();
+        //System.out.println(s.BaysBallSearch("B", "A", new String[]{"M", "J"}));
+        System.out.println(Arrays.toString(VE.EliminationProcess()));
+        //System.out.println(Arrays.toString(VE.getSortedFactorsCollection()));
         VE.FactorsToString();
-        for(BaysNode n:V.values()){
-            System.out.println(n.toString());
-        }
 
 
 //        for (String s : a) {
