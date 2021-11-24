@@ -38,8 +38,17 @@ public class MainBeysNet {
 
     }
 
+    /**
+     * In the main function we will read the xml and txt(input) files
+     * during we will create the network that will be saved in a Hashmap
+     * called V -  after creating the network we can
+     * create an output file with all the answers to queries read from the input file
+     * @param args
+     * @throws IOException
+     */
+
     public static void main(String[] args) throws IOException {
-        readFromFile("input.txt");
+        readFromFile("input.txt"); //the path of the input txt
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newDefaultInstance();
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
@@ -89,7 +98,7 @@ public class MainBeysNet {
 
         Searches s= new Searches(V);
 
-        FileWriter writer = new FileWriter("C:\\Intellij\\AI\\output.txt");
+        FileWriter writer = new FileWriter("C:\\Intellij\\AI\\src\\output.txt");
         for (int i = 1; i < array.length; i++) {
             if(!array[i].contains("P(")){
                 String ans=s.BaysSearch(array[i]);

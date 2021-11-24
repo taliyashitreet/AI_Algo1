@@ -26,6 +26,15 @@ public class VariableElimination {
         this.hidden = tmp[1].split("\\)")[1].substring(1).split("-");
     }
 
+    /**
+     * this is the maim function- You can clearly see in this function the process of answering the query-
+     * first you have to check dependency in order to delete irrelevant factors.
+     * Then reduce - delete all the values that do not interest us in the query.
+     * then I will create an array of strings that saves all the Hashmap key names (for convenience)
+     * and then calculate the number of multiplication
+     * and addition operations during join and eliminate and of course normalize
+     * @return
+     */
     public String EliminationProcess() {
         this.dependency();
         this.reduction();
