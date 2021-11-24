@@ -23,15 +23,18 @@ public class VariableElimination {
         String[] tmp = Query.split("\\|");
         this.query = (tmp[0].split("\\("))[1];
         this.evidence = tmp[1].split("\\)")[0].split(",");
-        this.hidden = tmp[1].split("\\)")[1].split("-");
+        this.hidden = tmp[1].split("\\)")[1].substring(1).split("-");
     }
 
-    public int[] EliminationProcess() {
+    public String EliminationProcess() {
         this.dependency();
         this.reduction();
         this.changingKeys();
         this.CreateStringArray();
-        return this.BeforeJoin();
+        int[] operations = new int[2];
+        operations = this.BeforeJoin();
+        double ans = this.normalization();
+        return Double.toString(ans) + "," + operations[1] + "," + operations[0];
     }
 
     /**
@@ -40,12 +43,6 @@ public class VariableElimination {
      * and if 2 strings length are same size we will sort according to the ASCII values of the cpt table
      */
 
-    private void swap(int i, int j) {
-        String tmp = "";
-        tmp = this.SortedFactorsCollection[i];
-        this.SortedFactorsCollection[i] = this.SortedFactorsCollection[j];
-        this.SortedFactorsCollection[j] = tmp;
-    }
 
     //getters
     public LinkedHashMap<String, LinkedHashMap<String, Double>> getFactorsCollection() {
@@ -74,51 +71,80 @@ public class VariableElimination {
         for (int i = 0; i < this.evidence.length; i++) {
             evi[i] = this.evidence[i].split("=")[0];
         }
-        Searches searches = new Searches(net);
+        Searches searches = new Searches(this.net);
         for (int i = 0; i < this.hidden.length; i++) {
             String hid = this.hidden[i];
-            if (searches.ancestor(hid, query).equals("Yes") || searches.BaysBallSearch(query, hid, evi).equals("Yes")) {
+            boolean flag = true;
+            for (String e : evi) {
+                if (searches.ancestor(hid, e).equals("Yes")) //If it is an ancestor of one of them then it is impossible to delete it
+                    flag = false;
+            }
+            if (searches.ancestor(hid, query).equals("Yes"))
+                flag = false; //same as above on the query
+            if (flag) {
+                removeFactor(hid);
+                removeHid(i);
+
+            }
+            if (searches.BaysBallSearch(query, hid, evi).equals("Yes")) {
                 removeFactor(hid);
                 removeHid(i);
             }
-        }
-        for (String evidence : evi) {
-            for (int i = 0; i < this.hidden.length; i++) {
-                String hid = this.hidden[i];
-                if (searches.ancestor(hid, evidence).equals("Yes") || searches.BaysBallSearch(evidence, hid, evi).equals("Yes")) {
-                    removeFactor(hid);
-                    removeHid(i);
-                }
-            }
+
         }
     }
 
     //remove this Hidden variable from the hidden array
     private void removeHid(int hid) {
         String[] newHidden = new String[this.hidden.length - 1];
+        boolean flag=true;
         for (int i = 0; i < this.hidden.length; i++) {
             if (i != hid) {
-                newHidden[i] = this.hidden[i];
+                if (flag)
+                    newHidden[i] = this.hidden[i];
+                else newHidden[i - 1] = this.hidden[i];
             }
+            else flag=false;
         }
         this.hidden = newHidden;
     }
 
     //remove the factor from the factors collection
-    public void removeFactor(String name) { //remove all the factors that contains "name"
-
-        for (BaysNode n : net.values()) { //the Factor of name itself
-            if (n.getName().equals(name)) {
-                this.FactorsCollection.remove(n.getName());
-            }
-            for (BaysNode p : n.getParents()) { //the Factors that name is given there
+    public void removeFactor(String name) { //remove all the evidence factors that contains "name"
+        for (int i = 0; i < this.evidence.length; i++) {
+            String[] evi = evidence[i].split("=");
+            for (BaysNode p : this.net.get(evi[0]).getParents()) {
                 if (p.getName().equals(name)) {
-                    this.FactorsCollection.remove(p.getName());
+                    this.FactorsCollection.remove(evi[0]);
+                    removeEvi(i);
+                }
+
+            }
+            for (BaysNode c : this.net.get(evi[0]).getChildren()) {
+                if (c.getName().equals(name)) {
+                    this.FactorsCollection.remove(evi[0]);
+                    removeEvi(i);
                 }
             }
-
         }
+        this.FactorsCollection.remove(name);
+        this.net.remove(name);
+        this.SortedFactorsCollection = new String[this.FactorsCollection.size()];
     }
+
+    private void removeEvi(int evi) {
+        String[] newEvi = new String[this.evidence.length - 1];
+        for (int i = 0; i < this.evidence.length; i++) {
+            if (i != evi) {
+                if (i < newEvi.length)
+                    newEvi[i] = this.evidence[i];
+                else newEvi[i - 1] = this.evidence[i];
+            }
+        }
+        this.evidence = newEvi;
+    }
+
+
 
     /**
      * In this function we want to reduce the tables by deleting all the instances that are not relevant to the query
@@ -130,26 +156,7 @@ public class VariableElimination {
             BaysNode curr = net.get(evi[0]);
             reduction(curr, evi[1]);
         }
-//        String[] quer = this.query.split("=");
-//        BaysNode queryNode = net.get(quer[0]);
-//
-//        for(BaysNode n:this.net.values()) { //now deleting complementary probability
-//            if (n != queryNode) {
-//                String value = n.getValues()[n.getValues().length - 1];
-//                Set<String> K = FactorsCollection.get(n.getName()).keySet(); //all the cpt's keys
-//                String[] keyArray = K.toArray(new String[K.size()]); //create a string array to be a iterable object for deleting
-//                for (int i = 0; i < keyArray.length; i++) {
-//                    if (keyArray[i].length() == 1 && keyArray[i].equals(value)) { //a small table
-//                        FactorsCollection.get(n.getName()).remove(keyArray[i]);
-//                    } else if (keyArray[i].length() > 1) { //bigger one
-//                        if (keyArray[i].substring(keyArray[i].length() - 1).equals(value)) { //the val will be at the last char in this case
-//                            FactorsCollection.get(n.getName()).remove(keyArray[i]);
-//                        }
-//                    }
-//                }
-//
-//            }
-//        }
+
     }
 
     private void reduction(BaysNode curr, String val) { //Auxiliary function for deletion by a given value in a specific node
@@ -160,10 +167,11 @@ public class VariableElimination {
                         Set<String> K = FactorsCollection.get(curr.getName()).keySet(); //all the cpt's keys
                         String[] keyArray = K.toArray(new String[K.size()]); //create a string array to be a iterable object for deleting
                         for (int i = 0; i < keyArray.length; i++) {
-                            if (keyArray[i].length() == 1 && keyArray[i].equals(value)) { //a small table
+                            String[] tmp = keyArray[i].split("-");
+                            if (tmp.length== 1 && tmp[0].equals(value)) { //a small table
                                 FactorsCollection.get(curr.getName()).remove(keyArray[i]);
-                            } else if (keyArray[i].length() > 1) { //bigger one
-                                if (keyArray[i].substring(keyArray[i].length() - 1).equals(value)) { //the val will be at the last char in this case
+                            } else if (tmp.length> 1) { //bigger one
+                                if (tmp[tmp.length-1].equals(value)) { //the val will be at the last char in this case
                                     FactorsCollection.get(curr.getName()).remove(keyArray[i]);
                                 }
                             }
@@ -176,7 +184,8 @@ public class VariableElimination {
                                 Set<String> K = FactorsCollection.get(node.getName()).keySet(); //all the cpt's keys
                                 String[] keyArray = K.toArray(new String[K.size()]);
                                 for (int i = 0; i < keyArray.length; i++) {
-                                    if (keyArray[i].substring(index, index + 1).equals(value)) { //the val will be at the "index" in this case
+                                    String[] tmp = keyArray[i].split("-");
+                                    if (tmp[index].equals(value)) { //the val will be at the "index" in this case
                                         FactorsCollection.get(node.getName()).remove(keyArray[i]);
                                     }
                                 }
@@ -185,6 +194,11 @@ public class VariableElimination {
                     }
                 }
             }
+        }
+        if(this.getFactorsCollection().get(curr.getName()).size()==1) {
+            this.FactorsCollection.remove(curr.getName());
+            this.net.remove(curr.getName());
+            this.SortedFactorsCollection=new String[this.FactorsCollection.size()];
         }
 
     }
@@ -198,7 +212,6 @@ public class VariableElimination {
                     str += val + ":" + this.FactorsCollection.get(c).get(val) + "\n";
             }
         }
-        System.out.println(str);
     }
 
     public String[] getSortedFactorsCollection() {
@@ -233,8 +246,8 @@ public class VariableElimination {
     }
 
     public int[] BeforeJoin() {
-        int mult=0;
-        int sum=0;
+        int mult = 0;
+        int sum = 0;
         for (int i = 0; i < this.hidden.length; i++) { //the Elimination start now
             String hid = this.hidden[i];
             while (Arrays.toString(this.SortedFactorsCollection).contains(hid)) { //As long as the hid we want to eliminate exists in the collection
@@ -250,15 +263,23 @@ public class VariableElimination {
                 }
                 if (toSend[0] != null) {
                     if (toSend[1] != null) {
-                        mult+=join(toSend,mult);
+                        mult += join(toSend, 0);
                     } else { //it means that there is only one table left that contains the hidden
-                        sum+=eliminate(toSend[0], hid,sum);
+                        sum += eliminate(toSend[0], hid, 0);
                     }
                 }
             }
         }
-        mult+=join(this.SortedFactorsCollection,mult);
-       return new int[]{mult, sum};
+        if(this.FactorsCollection.size()==2)
+            mult += join(this.SortedFactorsCollection, 0);
+        return new int[]{mult, sum};
+    }
+
+    private void delLastEvi() {
+        for (String evi:evidence){
+            if(Arrays.toString(this.SortedFactorsCollection).contains(evi))
+                this.FactorsCollection.remove(evi);
+        }
     }
 
     public int eliminate(String el, String hid, int sum) {
@@ -271,34 +292,33 @@ public class VariableElimination {
                 index = i;
             } else toPut += toEl[i] + "-";
         }
-        if (toPut.substring(toPut.length()-1).equals("-"))
-            toPut = toPut.substring(0,toPut.length()-1);
-        for (String key1 : this.FactorsCollection.get(el).keySet()) {
-            for (String key2 : this.FactorsCollection.get(el).keySet()) {
+        if (toPut.substring(toPut.length() - 1).equals("-"))
+            toPut = toPut.substring(0, toPut.length() - 1);
+        Set<String> K = this.FactorsCollection.get(el).keySet();
+        String[] keyArray = K.toArray(new String[K.size()]);
+        for (int i = 0; i < keyArray.length; i++) {
+            for (int j = i + 1; j < keyArray.length; j++) {
                 String putVal = "";
-                if (key1.equals(key2)) break;
-                else {
-                    String[] val1 = key1.split("-");
-                    String[] val2 = key2.split("-");
-                    String tmp1 = val1[index];
-                    String tmp2 = val2[index];
-                    if (!tmp1.equals(tmp2)) {
-                        for (int i = 0; i < val1.length; i++) {
-                            if (i != index) {
-                                if (i != val1.length - 1)
-                                    putVal += val1[i] + "-";
-                                else putVal += val1[i];
-                            }
-                        }
-                        if (newCpt.get(putVal) == null) {
-                            double prob = this.FactorsCollection.get(el).get(key1) +
-                                    this.FactorsCollection.get(el).get(key2);
-                            sum++;
-                            newCpt.put(putVal, prob);
+                String[] val1 = keyArray[i].split("-");
+                String[] val2 = keyArray[j].split("-");
+                boolean flag = true;
+                for (int k = 0; k < val1.length; k++) {
+                    if (k == index && val1[index] == val2[index]) flag = false;
+                    else if (k != index && !val1[k].equals(val2[k])) flag = false;
+                }
+                if (flag) {
+                    for (int k = 0; k < val1.length; k++) {
+                        if (k != index) {
+                            if (k != val1.length - 1)
+                                putVal += val1[k] + "-";
+                            else putVal += val1[k];
                         }
                     }
+                    double prob = this.FactorsCollection.get(el).get(keyArray[i]) +
+                            this.FactorsCollection.get(el).get(keyArray[j]);
+                    sum++;
+                    newCpt.put(putVal, prob);
                 }
-
             }
         }
         this.FactorsCollection.put(toPut, newCpt);
@@ -306,15 +326,16 @@ public class VariableElimination {
         String[] newSorted = new String[this.SortedFactorsCollection.length];
         for (int i = 0; i < newSorted.length; i++) {
             if (this.SortedFactorsCollection[i].equals(el)) {
-                newSorted[i]=toPut;
+                newSorted[i] = toPut;
             } else {
                 newSorted[i] = this.SortedFactorsCollection[i];
             }
         }
-        this.SortedFactorsCollection=newSorted;
+        this.SortedFactorsCollection = newSorted;
         sort();
         return sum;
     }
+
 
     public int join(String[] joins, int mult) {
         LinkedHashMap<String, Double> newCpt = new LinkedHashMap<>();
@@ -361,7 +382,7 @@ public class VariableElimination {
                     double prob = this.FactorsCollection.get(joins[1]).get(key1) *
                             this.FactorsCollection.get(joins[0]).get(key2);
                     mult++;
-                    String putVal = "";  // ????????????????
+                    String putVal = "";
                     for (int i = 0; i < val1.length; i++) {
                         putVal += val1[i] + "-";
 
@@ -381,27 +402,23 @@ public class VariableElimination {
             }
         }
         this.FactorsCollection.put(putName, newCpt);
-        if(!putName.equals(joins[1])) this.FactorsCollection.remove(joins[1]);
-        if(!putName.equals(joins[0]))this.FactorsCollection.remove(joins[0]);
-        this.DelFromDorted(joins, putName);
+        if (!putName.equals(joins[1])) this.FactorsCollection.remove(joins[1]);
+        if (!putName.equals(joins[0])) this.FactorsCollection.remove(joins[0]);
+        this.DelFromSorted(joins, putName);
         return mult;
     }
 
 
-    public void DelFromDorted(String[] joins, String putName) {
+    public void DelFromSorted(String[] joins, String putName) {
         String[] newSorted = new String[this.SortedFactorsCollection.length - 1];
         boolean flag = true;
         for (int i = 0; i < this.SortedFactorsCollection.length; i++) {
             if (!this.SortedFactorsCollection[i].equals(joins[0]) && !this.SortedFactorsCollection[i].equals(joins[1])) {
-                if (flag)
+                if (i < newSorted.length)
                     newSorted[i] = this.SortedFactorsCollection[i];
-                else {
-                    newSorted[i - 1] = this.SortedFactorsCollection[i];
-                }
-            }
-            else  { //the first time we get a that needed to be remove
+                else newSorted[i - 1] = this.SortedFactorsCollection[i];
+            } else if (flag) { //the first time we get a that needed to be remove
                 newSorted[i] = putName;
-                i++;
                 flag = false;
             }
         }
@@ -435,6 +452,36 @@ public class VariableElimination {
                 }
             }
         }
+    }
+
+    private void swap(int i, int j) {
+        String tmp = "";
+        tmp = this.SortedFactorsCollection[i];
+        this.SortedFactorsCollection[i] = this.SortedFactorsCollection[j];
+        this.SortedFactorsCollection[j] = tmp;
+    }
+
+    public double normalization() {
+        String[] q = this.query.split("=");
+        double normFactor = 0;
+        double tmp = 0;
+        double toNormal = 0;
+        for (double val : this.FactorsCollection.get(this.SortedFactorsCollection[0]).values()) {
+            tmp += val;
+        }
+        normFactor = 1.0 / tmp;
+        for (String key: this.FactorsCollection.keySet()){
+            for(String k:this.FactorsCollection.get(key).keySet()){
+                String[] val=k.split("-");
+                if(val[0].equals(q[1])) {
+                    toNormal += this.FactorsCollection.get(key).get(k);
+                    break;
+                }
+            }
+        }
+
+        double ans = toNormal * normFactor;
+        return ans;
     }
 }
 

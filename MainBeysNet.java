@@ -7,11 +7,9 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.io.File;  // Import the File class
-import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
 
 
@@ -37,10 +35,10 @@ public class MainBeysNet {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
-        System.out.println(Arrays.toString(array));
+
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         readFromFile("input.txt");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newDefaultInstance();
         try {
@@ -80,10 +78,6 @@ public class MainBeysNet {
 
             }
 
-//            for (String variable : V.keySet()) {
-//                System.out.println(V.get(variable).toString());
-            //}
-
 
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -92,36 +86,24 @@ public class MainBeysNet {
         } catch (SAXException e) {
             e.printStackTrace();
         }
-        //String ans = BaysBall.BaysSearch("L-B|T'=T", V);
 
-
-        String a="P(B=T|J=T,M=T)A-E";
-        VariableElimination VE= new VariableElimination(V,a);
-        //System.out.println( Arrays.toString(VE.getEvidence()));
-        //System.out.println( Arrays.toString(VE.getHidden()));
-        //System.out.println(VE.getQuery());
         Searches s= new Searches(V);
-//        String  evidence="M";
-//        String hid= "ALK";
-//        System.out.println(hid.substring(1,2));
-//        String[] evi={"M","J"};
+
+        FileWriter writer = new FileWriter("C:\\Intellij\\AI\\output.txt");
+        for (int i = 1; i < array.length; i++) {
+            if(!array[i].contains("P(")){
+                String ans=s.BaysSearch(array[i]);
+                writer.write(ans+"\n");
+            }
+            else {
+                VariableElimination VE= new VariableElimination(V,array[i]);
+                String ans= VE.EliminationProcess();
+                writer.write(ans+"\n");
+            }
+        }
+        writer.close();
 
 
-        //VE.FactorsToString();
-        //VE.reduction();
-        //VE.FactorsToString();
-        //System.out.println(s.BaysBallSearch("B", "A", new String[]{"M", "J"}));
-        System.out.println(Arrays.toString(VE.EliminationProcess()));
-        //System.out.println(Arrays.toString(VE.getSortedFactorsCollection()));
-        VE.FactorsToString();
 
-
-//        for (String s : a) {
-//            for (String t : b) {
-//                for (String c : e) {
-//                    System.out.println(s + t + c);
-//                }
-//            }
-//        }
     }
 }

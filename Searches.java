@@ -8,23 +8,25 @@ public class Searches {
     HashMap<String, BaysNode> BaysNet;
 
 
-    public Searches(HashMap<String, BaysNode> BaysNet){
-        this.BaysNet=BaysNet;
+    public Searches(HashMap<String, BaysNode> netInput){
+        this.BaysNet=new HashMap<String, BaysNode>();
+        for (String key : netInput.keySet()) {
+            this.BaysNet.put(key, new BaysNode(netInput.get(key)));
+        }
     }
 
     public String BaysSearch(String Query) {
         String[] tmp = Query.split("\\|");
         String[] Q = tmp[0].split("-");
-        String[] G = tmp[1].split(",");
         String start = Q[0]; //start the search from this node
         String toSearch = Q[1]; //end the search with this node
+        String[] G=(tmp.length>1)?tmp[1].split(","): new String[0];
         String[] given = new String[G.length];
         for (int i = 0; i <G.length; i++) {
             given[i]=G[i].split("=")[0];
         }
-        return BaysBallSearch(start, toSearch, G);
+        return BaysBallSearch(start, toSearch, given);
     }
-
    public String BaysBallSearch(String start, String toSearch,String[] given)    {
 
         for (String variable : this.BaysNet.keySet()) {
@@ -112,8 +114,8 @@ public String ancestor(String start, String toFind){
         BaysNode curr = queue.poll();
         if (!curr.getName().equals(toFind)) {
             for(BaysNode c: curr.getChildren()){
-                if(c.getColor().equals("white")){
-                    c.SetColor("gray");
+                if(BaysNet.get(c.getName()).getColor().equals("white")){
+                    BaysNet.get(c.getName()).SetColor("gray");
                     queue.add(c);
                 }
             }
