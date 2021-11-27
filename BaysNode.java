@@ -44,7 +44,7 @@ public class BaysNode implements Node {
     }
 
     public LinkedHashMap<String, Double> getCpt() {
-       return this.cpt;
+        return this.cpt;
     }
 
     public BaysNode(String name, int length) {
@@ -55,62 +55,133 @@ public class BaysNode implements Node {
         this.color = "white";
         this.cpt = new LinkedHashMap<String, Double>();
     }
-    public BaysNode(BaysNode other){
+
+    public BaysNode(BaysNode other) {
         this.values = new String[other.values.length];
         this.Name = other.getName();
         this.parents = new ArrayList<BaysNode>();
-        for(BaysNode p: other.getParents()){
+        for (BaysNode p : other.getParents()) {
             this.addToParents(p);
         }
         this.children = new ArrayList<BaysNode>();
-        for(BaysNode c: other.getChildren()){
+        for (BaysNode c : other.getChildren()) {
             this.addToChildren(c);
         }
         this.color = "white";
         this.cpt = new LinkedHashMap<String, Double>();
-        for(String key :other.getCpt().keySet()){
-             this.cpt.put(key,other.getCpt().get(key));
+        for (String key : other.getCpt().keySet()) {
+            this.cpt.put(key, other.getCpt().get(key));
         }
-        this.values=new String[other.getValues().length];
+        this.values = new String[other.getValues().length];
         for (int i = 0; i < values.length; i++) {
-           this.values[i]=other.getValues()[i];
+            this.values[i] = other.getValues()[i];
         }
 
     }
-
 
     public void createCPT(String table) {
         String[] toArr = table.split(" ");
-        int i=0;
-        while (i<=toArr.length) {
-            if(parents.size()>0) {
-                Enter(i, 0, this.parents, "", toArr);
-                break;
-            }
-            for (String val : this.values) {
-                cpt.put(val, Double.parseDouble(toArr[i++]));
-            }
-            break;
+        String[] toPut = new String[toArr.length];
+        for(int i = 0; i< toArr.length; i++){
+            toPut[i]="";
         }
-
-    }
-
-
-    private int Enter(int i, int n, ArrayList<BaysNode> parents, String ans,String[] toArr) {
-        if (n == parents.size()-1) {
-            for (String val1 : parents.get(n).getValues()) {
-                for (String val : this.values) {
-                    cpt.put(ans + val1+ "-" + val, Double.parseDouble(toArr[i++]));
+        int move = 1;
+        for (int i = 0; i < this.parents.size(); i++) {
+            int OutcomeLen = parents.get(i).getValues().length;
+            move *= OutcomeLen;
+            int steps = toArr.length / move;
+            int currOutcome = 0;
+            for (int j = 0; j < toArr.length; j++) {
+                if (j > 0 && j % steps == 0) {
+                    currOutcome++;
                 }
+                if (currOutcome >= OutcomeLen) {
+                    currOutcome = 0;
+                }
+                toPut[j] += parents.get(i).getValues()[currOutcome]+"-";
             }
-            return i;
         }
-        for (String val1 : parents.get(n).getValues()) {
-            ans =(n>0)?ans+ val1+"-":val1+"-";
-            i=Enter(i, n + 1, parents, ans, toArr);
+        int currOutcome=0;
+        for (int j = 0; j < toArr.length; j++) {
+                toPut[j] += this.values[currOutcome];
+                currOutcome++;
+            if (currOutcome >= this.values.length) {
+                currOutcome = 0;
+            }
+
         }
-    return i;
+        for (int i = 0; i < toArr.length; i++) {
+            this.cpt.put(toPut[i], Double.parseDouble(toArr[i]));
+        }
     }
+
+
+
+//        String[] toArr = table.split(" ");
+//        int move=1;
+//        for(int i=0; i< this.parents.size(); i++){
+//            int OutcomeLen=parents.get(i).getValues().length;
+//            move*=OutcomeLen;
+//            int steps=toArr.length / move;
+//            for(int j=0; j<toArr.length; j++){
+//                if(j>0 && j % steps ==0){
+//                    i++;
+//                }
+//                if(i>= OutcomeLen){
+//                    i=0;
+//                }
+//                String toPut=
+//            }
+//
+//        }
+    // }
+
+
+//    public void createCPT(String table) {
+//        String[] toArr = table.split(" ");
+//        int i = 0;
+//        while (i <= toArr.length) {
+//            if (parents.size() > 0) {
+//                Enter(i, 0, this.parents, "", toArr);
+//                break;
+//            }
+//            for (String val : this.values) {
+//                cpt.put(val, Double.parseDouble(toArr[i++]));
+//            }
+//            break;
+//        }
+//
+//    }
+//
+//
+//    private int Enter(int i, int n, ArrayList<BaysNode> parents, String ans, String[] toArr) {
+//        if (n == parents.size() - 1) {
+//            for (String val1 : parents.get(n).getValues()) {
+//                for (String val : this.values) {
+//                    cpt.put(ans + val1 + "-" + val, Double.parseDouble(toArr[i++]));
+//                }
+//            }
+//            return i;
+//        }
+//        for (String val1 : parents.get(n).getValues()) {
+//            //ans=ans+ val1+"-";
+//            if (i != 0) {
+//                if (((this.values.length) * (parents.get(parents.size() - 1).getValues().length)) % i == 0) {
+//                    String tmp[] = ans.split("-");
+//                    tmp[n] = val1;
+//                    ans = "";
+//                    for (int j = 0; j < tmp.length; j++) {
+//                        ans += tmp[j] + "-";
+//                    }
+//
+//                }
+//            } else {
+//                ans = ans + val1 + "-";
+//            }
+//            i = Enter(i, n + 1, parents, ans, toArr);
+//        }
+//        return i;
+//    }
 
     public void SetColor(String color) {
         this.color = color;
@@ -150,25 +221,21 @@ public class BaysNode implements Node {
                 ", values=[" + Arrays.toString(values) +
                 "] perant={" + getP() +
                 "} children={" + getC() +
-                "} cpt="+ checkCPT();
+                "} cpt=" + checkCPT();
 
 
     }
 
-    private String  checkCPT() {
-        String str="";
+    private String checkCPT() {
+        String str = "";
         if (cpt == null) {
             return str;
         }
         for (String k : cpt.keySet()) {
-           str+=k+":"+ cpt.get(k)+" ";
+            str += k + ":" + cpt.get(k) + " ";
         }
         return str;
     }
-
-
-
-
 
 
     @Override
@@ -355,7 +422,6 @@ public class BaysNode implements Node {
     public Object getUserData(String key) {
         return null;
     }
-
 
 
 }
