@@ -106,7 +106,7 @@ public class BaysNode implements Node {
             return i;
         }
         for (String val1 : parents.get(n).getValues()) {
-            ans = val1+"-";
+            ans =(n>0)?ans+ val1+"-":val1+"-";
             i=Enter(i, n + 1, parents, ans, toArr);
         }
     return i;
