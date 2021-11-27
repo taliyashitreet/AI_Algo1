@@ -14,7 +14,7 @@ import java.util.Scanner; // Import the Scanner class to read text files
 
 
 // This class for pars the xml file to baysien network- the net will be held by HashMap
-public class MainBeysNet {
+public class Ex1 {
     static HashMap<String, BaysNode> V = new HashMap<>(); //collection of nodes - The Net
     static String[] array = new String[0]; // will contain the input data
 
@@ -48,6 +48,7 @@ public class MainBeysNet {
      */
 
     public static void main(String[] args) throws IOException {
+
         readFromFile("input.txt"); //the path of the input txt
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newDefaultInstance();
         try {
@@ -88,17 +89,21 @@ public class MainBeysNet {
             }
 
 
+
         } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (SAXException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
+
 
         Searches s= new Searches(V);
 
-        FileWriter writer = new FileWriter("C:\\Intellij\\AI\\src\\output.txt");
+
+
+        FileWriter writer = new FileWriter("output.txt");
         for (int i = 1; i < array.length; i++) {
             if(!array[i].contains("P(")){
                 String ans=s.BaysSearch(array[i]);
