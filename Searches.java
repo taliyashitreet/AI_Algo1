@@ -98,10 +98,10 @@ public class Searches {
                 }
             }
         } else {
-            return "No"; //we found the node end - so they are dependent
+            return "no"; //we found the node end - so they are dependent
         }
     }
-        return"Yes"; // independent
+        return"yes"; // independent
 }
 public String ancestor(String start, String toFind){
     for (String variable : this.BaysNet.keySet()) {
@@ -120,10 +120,10 @@ public String ancestor(String start, String toFind){
                 }
             }
         }
-        else{ return "Yes"; }
+        else{ return "yes"; }
 
     }
-    return "No";
+    return "no";
 
 }
 

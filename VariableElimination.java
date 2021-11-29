@@ -1,4 +1,3 @@
-import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -39,10 +38,9 @@ public class VariableElimination {
      * @return
      */
     public String EliminationProcess() {
-        if(IsInTheTable()){
-            return IsIn()+",0,0";
-        }
-        else {
+        if (IsInTheTable()) {
+            return IsIn() + ",0,0";
+        } else {
             this.dependency();
             this.reduction();
             this.changingKeys();
@@ -59,23 +57,25 @@ public class VariableElimination {
      * we want to sort the strings from the smallest to the biggest
      * and if 2 strings length are same size we will sort according to the ASCII values of the cpt table
      */
-public boolean IsInTheTable(){
-    if(this.evidence.length==1 && evidence[0].equals("")){
-        return true;
-    }
-    return false;
-}
-public String IsIn(){
-    String[] q= this.query.split("=");
-    String ans="";
-    for(String key: this.net.get(q[0]).getCpt().keySet()){
-        String[] k=key.split("-");
-        if(k[k.length-1].equals(q[1])){
-            ans+= Double.toString(this.net.get(q[0]).getCpt().get(key));
+    public boolean IsInTheTable() { //Checks whether the answer is in the cell in the table
+        if (this.evidence.length == 1 && evidence[0].equals("")) {
+            return true;
         }
+        return false;
     }
-    return ans;
-}
+
+    public String IsIn() { //Cell in the table
+        String[] q = this.query.split("=");
+        String ans = "";
+        for (String key : this.net.get(q[0]).getCpt().keySet()) {
+            String[] k = key.split("-");
+            if (k[k.length - 1].equals(q[1])) {
+                ans += Double.toString(this.net.get(q[0]).getCpt().get(key));
+            }
+        }
+        return ans;
+    }
+
     //getters
     public LinkedHashMap<String, LinkedHashMap<String, Double>> getFactorsCollection() {
         return FactorsCollection;
@@ -98,7 +98,7 @@ public String IsIn(){
      * We must first check whether the hidden variable is independent of the query and evidence variables
      * if it is independent we will to delete any appearance of it
      */
-    public void dependency() { //first,
+    public void dependency() {
         String query = this.query.split("=")[0];
         String[] evi = new String[this.evidence.length];
         for (int i = 0; i < this.evidence.length; i++) {
@@ -111,18 +111,23 @@ public String IsIn(){
             String hid = copyOf[i];
             boolean flag = true;
             for (String e : evi) {
-                if (searches.ancestor(hid, e).equals("Yes")) //If it is an ancestor of one of them then it is impossible to delete it
+                if (searches.ancestor(hid, e).equals("yes")) //If it is an ancestor of one of them then it is impossible to delete it
                     flag = false;
+                //If the hidden variable is neither an ancestor of evidence nor of the query
+                // then it can be deleted from the table
             }
-            if (searches.ancestor(hid, query).equals("Yes"))
-                flag = false; //same as above on the query
+            if (searches.ancestor(hid, query).equals("yes"))
+                flag = false;
+            //If the hidden variable is neither an ancestor of evidence nor of the query
+            // then it can be deleted from the table
             if (flag) {
                 removeFactor(hid);
                 removeHid(copyOf[i]);
 
             }
             if (!flag) {
-                if (searches.BaysBallSearch(query, hid, evi).equals("Yes")) {
+                //If the variable is independent
+                if (searches.BaysBallSearch(query, hid, evi).equals("yes")) {
                     removeFactor(hid);
                     removeHid(copyOf[i]);
                 }
@@ -146,32 +151,51 @@ public String IsIn(){
     }
 
     //remove the factor from the factors collection
-    public void removeFactor(String name) { //remove all the evidence factors that contains "name"
-        for (int i = 0; i < this.evidence.length; i++) {
-            String[] evi = evidence[i].split("=");
-            for (BaysNode p : this.net.get(evi[0]).getParents()) {
-                if (p.getName().equals(name)) {
-                    if (p.getParents().size() == 0) {
-                        this.FactorsCollection.remove(evi[0]);
-                        removeEvi(i);
+    public void removeFactor(String name) { //remove all the factors that contains "name"
+        String[] evi = new String[evidence.length];
+        for (int i = 0; i < evidence.length; i++) {
+            String[] tmp = evidence[i].split("=");
+            evi[i] = tmp[0];
+        }
+        //For sure the children of the node we want to delete hold values within their table that need to be deleted
+        for (BaysNode n : this.net.get(name).getChildren()) {
+            if (n.getParents().size() == 1) {
+                this.FactorsCollection.remove(n.getName());
+                this.net.remove(n.getName());
+            } else {
+                String eviStr = Arrays.toString(evi);
+                boolean flag = true;
+                for (int i = 0; i < n.getParents().size(); i++) {
+                    if (!n.getParents().get(i).getName().equals(name)) {
+                        if (!eviStr.contains(n.getParents().get(i).getName()))
+                            flag = false;
                     }
                 }
-
+                if (flag) {
+                    this.FactorsCollection.remove(n.getName());
+                    this.net.remove(n.getName());
+                    this.SortedFactorsCollection = new String[this.FactorsCollection.size()];
+                    if (eviStr.contains(n.getName())) {
+                        removeEvi(n.getName());
+                    }
+                }
             }
-//            for (BaysNode c : this.net.get(evi[0]).getChildren()) {
-//                if (c.getName().equals(name)) {
-//                    this.FactorsCollection.remove(evi[0]);
-//                    this.net.get(evi[0]).getChildren().remove(c.getName());
-//                    this.FactorsCollection.
-//                }
-//            }
         }
+
         this.FactorsCollection.remove(name);
         this.net.remove(name);
         this.SortedFactorsCollection = new String[this.FactorsCollection.size()];
     }
 
-    private void removeEvi(int evi) {
+    private void removeEvi(String evi) {
+        for (int i = 0; i < evidence.length; i++) {
+            if (evidence[i].contains(evi)) {
+                removeEvi(i);
+            }
+        }
+    }
+
+    private void removeEvi(int evi) { //remove the evidence from the evidence's array
         String[] newEvi = new String[this.evidence.length - 1];
         for (int i = 0; i < this.evidence.length; i++) {
             if (i != evi) {
@@ -194,45 +218,42 @@ public String IsIn(){
             BaysNode curr = net.get(evi[0]);
             reduction(curr, evi[1]);
         }
-
-    }
-
-    private void reduction(BaysNode curr, String val) { //Auxiliary function for deletion by a given value in a specific node
-        for (String value : curr.getValues()) {
-            if (!value.equals(val)) {
-                for (BaysNode node : net.values()) {
-                    if (node.getName().equals(curr.getName())) { //the curr is the node
-                        Set<String> K = FactorsCollection.get(curr.getName()).keySet(); //all the cpt's keys
-                        String[] keyArray = K.toArray(new String[K.size()]); //create a string array to be a iterable object for deleting
-                        for (int i = 0; i < keyArray.length; i++) {
-                            String[] tmp = keyArray[i].split("-");
-                            if (tmp.length == 1 && tmp[0].equals(value)) { //a small table
-                                FactorsCollection.get(curr.getName()).remove(keyArray[i]);
-                            } else if (tmp.length > 1) { //bigger one
-                                if (tmp[tmp.length - 1].equals(value)) { //the val will be at the last char in this case
-                                    FactorsCollection.get(curr.getName()).remove(keyArray[i]);
-                                }
-                            }
-                        }
-                    } else {
-                        int index = 0;
-                        for (BaysNode p : node.getParents()) {
-                            if (p.getName().equals(curr.getName())) {
-                                index++; //the index of curr at node's parents array
-                                Set<String> K = FactorsCollection.get(node.getName()).keySet(); //all the cpt's keys
-                                String[] keyArray = K.toArray(new String[K.size()]);
-                                for (int i = 0; i < keyArray.length; i++) {
-                                    String[] tmp = keyArray[i].split("-");
-                                    if (tmp[index].equals(value)) { //the val will be at the "index" in this case
-                                        FactorsCollection.get(node.getName()).remove(keyArray[i]);
-                                    }
-                                }
-                            }
-                        }
+        for (BaysNode n : net.values()) {
+            for (BaysNode p : n.getParents()) {
+                for (int i = 0; i < evidence.length; i++) {
+                    String[] evi = evidence[i].split("=");//we got a string like: "B=T" so we need to split
+                    if (p.getName().equals(evi[0])) {
+                        reduction(n, p, evi[1]);
                     }
                 }
             }
         }
+    }
+
+    private void reduction(BaysNode curr, BaysNode evi, String val) {
+        int index = curr.getParents().indexOf(evi);
+        Set<String> K = net.get(curr.getName()).getCpt().keySet(); //all the cpt's keys
+        String[] keyArray = K.toArray(new String[K.size()]);
+        for (int i = 0; i < keyArray.length; i++) {
+            String[] tmp = keyArray[i].split("-");
+            if (!tmp[index].equals(val)) {
+                this.FactorsCollection.get(curr.getName()).remove(keyArray[i]);
+                this.net.get(curr.getName()).getCpt().remove(keyArray[i]);
+            }
+        }
+    }
+
+    private void reduction(BaysNode curr, String val) { //Auxiliary function for deletion by a given value in a specific node
+        Set<String> K = net.get(curr.getName()).getCpt().keySet(); //all the cpt's keys
+        String[] keyArray = K.toArray(new String[K.size()]);
+        for (int i = 0; i < keyArray.length; i++) {
+            String[] tmp = keyArray[i].split("-");
+            if (!tmp[tmp.length - 1].equals(val)) {
+                this.FactorsCollection.get(curr.getName()).remove(keyArray[i]);
+                this.net.get(curr.getName()).getCpt().remove(keyArray[i]);
+            }
+        }
+
         if (this.getFactorsCollection().get(curr.getName()).size() == 1) {
             this.FactorsCollection.remove(curr.getName());
             this.net.remove(curr.getName());
@@ -283,6 +304,13 @@ public String IsIn(){
         sort(); //sorting function
     }
 
+    /**
+     * This function is responsible for the whole process of variable elimination -
+     * checks if there are any hidden ones that need to be treated -
+     * If there are two tables with the same variable hidden then join them
+     * if there is one table left with this hidden than we de eliminate
+     * @return
+     */
     public int[] BeforeJoin() {
         int mult = 0;
         int sum = 0;
@@ -335,30 +363,36 @@ public String IsIn(){
         Set<String> K = this.FactorsCollection.get(el).keySet();
         String[] keyArray = K.toArray(new String[K.size()]);
         for (int i = 0; i < keyArray.length; i++) {
+            String[] val1 = keyArray[i].split("-");
+            boolean flag = false;
+            double prob = 0;
             for (int j = i + 1; j < keyArray.length; j++) {
-                String putVal = "";
-                String[] val1 = keyArray[i].split("-");
                 String[] val2 = keyArray[j].split("-");
-                boolean flag = true;
-                for (int k = 0; k < val1.length; k++) {
-                    if (k == index && val1[index].equals(val2[index])) {
-                        flag = false;
+                boolean flag2 = true;
+                for (int k = 0; k < val2.length; k++) {
+                    if (k != index && !val1[k].equals(val2[k])) {
+                        flag2 = false;
                         break;
-                    } else if (k != index && !val1[k].equals(val2[k])) flag = false;
-                }
-                if (flag) {
-                    for (int k = 0; k < val1.length; k++) {
-                        if (k != index) {
-                            if (k != val1.length - 1)
-                                putVal += val1[k] + "-";
-                            else putVal += val1[k];
-                        }
                     }
-                    double prob = this.FactorsCollection.get(el).get(keyArray[i]) +
+                }
+                if (flag2) {
+                    flag = true;
+                    prob += this.FactorsCollection.get(el).get(keyArray[i]) +
                             this.FactorsCollection.get(el).get(keyArray[j]);
                     sum++;
-                    newCpt.put(putVal, prob);
+
                 }
+            }
+            if (flag) {
+                String putVal = "";
+                for (int k = 0; k < val1.length; k++) {
+                    if (k != index) {
+                        if (k != val1.length - 1)
+                            putVal += val1[k] + "-";
+                        else putVal += val1[k];
+                    }
+                }
+                newCpt.put(putVal, prob);
             }
         }
         this.FactorsCollection.put(toPut, newCpt);
@@ -418,11 +452,11 @@ public String IsIn(){
                     tmp2 += val2[j] + "-";
 
                 }
-                if (tmp1.equals(tmp2)) {
+                if (tmp1.equals(tmp2)) { //When the indices of the overlapping variables are the same the values should be multiplied
                     double prob = this.FactorsCollection.get(joins[1]).get(key1) *
                             this.FactorsCollection.get(joins[0]).get(key2);
                     mult++;
-                    String putVal = "";
+                    String putVal = "";//the new name of the new Factor we're making
                     for (int i = 0; i < val1.length; i++) {
                         putVal += val1[i] + "-";
 
@@ -444,10 +478,10 @@ public String IsIn(){
         this.FactorsCollection.put(putName, newCpt);
         if (!putName.equals(joins[1])) {
             this.FactorsCollection.remove(joins[1]);
-        } else this.DelFromSorted2(joins[0]);
+        } else this.DelFromSorted(joins[0]);
         if (!putName.equals(joins[0])) {
             this.FactorsCollection.remove(joins[0]);
-        } else this.DelFromSorted2(joins[1]);
+        } else this.DelFromSorted(joins[1]);
         if (!putName.equals(joins[1]) && !putName.equals(joins[0])) this.DelFromSorted(joins, putName);
         return mult;
     }
@@ -473,7 +507,7 @@ public String IsIn(){
 
     }
 
-    public void DelFromSorted2(String joins) {
+    public void DelFromSorted(String joins) {
         String[] newSorted = new String[this.SortedFactorsCollection.length - 1];
         boolean flag = true;
         for (int i = 0; i < this.SortedFactorsCollection.length; i++) {
@@ -528,28 +562,28 @@ public String IsIn(){
         double toNormal = 0;
         for (double val : this.FactorsCollection.get(this.SortedFactorsCollection[0]).values()) {
             tmp += val;
+            sum++;
         }
+        sum=sum-1;//For each pair one connection operation
         normFactor = 1.0 / tmp;
-        String [] findQ= this.SortedFactorsCollection[0].split("-");
-        int index=0;
-        for(int i=0; i<findQ.length; i++){
-          if(findQ[i].equals(q[0])){
-              index=i;
-          }
+        String[] findQ = this.SortedFactorsCollection[0].split("-");
+        int index = 0;
+        for (int i = 0; i < findQ.length; i++) {
+            if (findQ[i].equals(q[0])) {
+                index = i;
+            }
         }
         for (String key : this.FactorsCollection.keySet()) {
             for (String k : this.FactorsCollection.get(key).keySet()) {
                 String[] val = k.split("-");
                 if (val[index].equals(q[1])) {
                     toNormal += this.FactorsCollection.get(key).get(k);
-                    sum++;
                     break;
                 }
             }
         }
         double ans = toNormal * normFactor;
         DecimalFormat df = new DecimalFormat("#.#####");
-        df.setRoundingMode(RoundingMode.CEILING);
 
         return df.format(ans) + "," + Integer.toString(sum);
     }

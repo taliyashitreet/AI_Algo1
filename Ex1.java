@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Scanner; // Import the Scanner class to read text files
 
 
-// This class for pars the xml file to baysien network- the net will be held by HashMap
+// This class for pars the xml file to baysian network- the net will be held by HashMap
 public class Ex1 {
     static HashMap<String, BaysNode> V = new HashMap<>(); //collection of nodes - The Net
     static String[] array = new String[0]; // will contain the input data
@@ -49,8 +49,8 @@ public class Ex1 {
 
     public static void main(String[] args) throws IOException {
 
-        readFromFile("input.txt"); //the path of the input txt
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newDefaultInstance();
+        readFromFile("input.txt"); //the input txt
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(array[0]); // the name of the xml file
@@ -91,11 +91,11 @@ public class Ex1 {
 
 
         } catch (ParserConfigurationException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
         } catch (IOException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
         } catch (SAXException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
         }
 
 
